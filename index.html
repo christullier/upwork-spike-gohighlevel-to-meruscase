@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GoHighLevel to MerusCase Intake · Integration Simulation</title>
+    <meta
+      name="description"
+      content="A click-through simulation of a one-way intake integration from GoHighLevel to MerusCase. All data is fake."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c3aed'/%3E%3Cpath d='M8 16h13m0 0-5-5m5 5-5 5' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="eyebrow">Workers' comp intake · integration demo</div>
+          <h1>GoHighLevel <span class="arrow">→</span> MerusCase</h1>
+          <p class="lede">
+            A signed lead becomes a case. This page shows each step of the integration.
+          </p>
+        </div>
+        <div class="topbar-side">
+          <span class="sim-badge"><span class="pulse" aria-hidden="true"></span>Simulation · fake data</span>
+          <div class="top-actions">
+            <button class="btn btn-ghost" id="replay" type="button" disabled>
+              Send webhook again
+            </button>
+            <button class="btn btn-ghost" id="reset" type="button">Reset</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel panel-ghl" aria-label="GoHighLevel pipeline">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot dot-ghl" aria-hidden="true"></span><h2>GoHighLevel</h2></div>
+            <span class="panel-kicker">Pipeline</span>
+          </div>
+          <div class="panel-body">
+            <div class="scenario">
+              <label for="scenario">Preset scenario</label>
+              <select id="scenario">
+                <option value="default">Start board · Carlos + Maria</option>
+                <option value="88214">Carlos Ramirez · new client</option>
+                <option value="88190">Maria Delgado · existing client</option>
+                <option value="88231">Denise Okafor · two injuries</option>
+                <option value="88247">Kevin Burke · missing employer</option>
+              </select>
+              <p class="hint" id="scenario-hint">Drag a card into Signed, or press Mark signed.</p>
+            </div>
+            <div id="pipeline" class="pipeline"></div>
+          </div>
+        </section>
+
+        <section class="panel panel-run" aria-label="Integration run log">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot dot-run" aria-hidden="true"></span><h2>Integration run</h2></div>
+            <label class="switch">
+              <input type="checkbox" id="skip" />
+              <span class="track" aria-hidden="true"></span>
+              Skip animation
+            </label>
+          </div>
+          <div class="panel-body" id="log-scroll">
+            <div id="log" class="log" aria-live="polite">
+              <div class="empty" id="log-empty">
+                <div class="empty-icon" aria-hidden="true">↓</div>
+                <p class="empty-title">Webhook is idle</p>
+                <p>Mark a lead as signed. The steps appear here.</p>
+              </div>
+            </div>
+          </div>
+          <button class="log-top" id="log-top" type="button" hidden>↑ Start of run</button>
+        </section>
+
+        <section class="panel panel-merus" aria-label="MerusCase contacts and cases">
+          <div class="panel-head">
+            <div class="panel-title"><span class="dot dot-merus" aria-hidden="true"></span><h2>MerusCase</h2></div>
+            <span class="panel-kicker" id="merus-count"></span>
+          </div>
+          <div class="panel-body" id="merus"></div>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <div class="foot-col">
+          <h3>What this shows</h3>
+          <p>
+            Dedupe, the 29-field map, firm IDs, one POST per injury, and three answers
+            for fields that have no API home.
+          </p>
+        </div>
+        <div class="foot-col">
+          <h3>What is assumed</h3>
+          <p>
+            Endpoint names come from the posting. Payload shapes are illustrative.
+            Firm IDs are placeholders from your instance. Gap placements are proposals
+            to confirm with the firm.
+          </p>
+        </div>
+        <div class="foot-col">
+          <h3>More</h3>
+          <a
+            href="https://github.com/christullier/upwork-spike-hubspot"
+            target="_blank"
+            rel="noreferrer"
+            >HubSpot spike: the same pattern, working</a
+          >
+          <p class="foot-note">No backend. No API keys. No data leaves this page.</p>
+        </div>
+      </footer>
+    </div>
+    <noscript>This demo needs JavaScript to run.</noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
