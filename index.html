@@ -66,13 +66,31 @@
             </label>
           </div>
           <div class="panel-body" id="log-scroll">
-            <div id="log" class="log" aria-live="polite">
-              <div class="empty" id="log-empty">
-                <div class="empty-icon" aria-hidden="true">↓</div>
-                <p class="empty-title">Webhook is idle</p>
-                <p>Mark a lead as signed. The steps appear here.</p>
+            <div class="run-now" id="run-now" aria-live="polite" hidden>
+              <div class="run-now-head">
+                <span class="run-now-kicker" id="run-now-kicker">In progress</span>
+                <span class="run-count" id="run-count">0 / 0</span>
+              </div>
+              <p class="run-now-title" id="run-now-title"></p>
+              <p class="run-now-summary" id="run-now-summary"></p>
+              <div class="progress" id="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <span class="progress-fill" id="progress-fill"></span>
               </div>
             </div>
+
+            <div class="empty" id="log-empty">
+              <div class="empty-icon" aria-hidden="true">↓</div>
+              <p class="empty-title">Webhook is idle</p>
+              <p>Mark a lead as signed. The steps appear here.</p>
+            </div>
+
+            <details class="run-details" id="run-details" hidden>
+              <summary>
+                <span class="run-details-label">Full run detail</span>
+                <span class="run-details-count" id="run-details-count"></span>
+              </summary>
+              <div id="log" class="log"></div>
+            </details>
           </div>
           <button class="log-top" id="log-top" type="button" hidden>↑ Start of run</button>
         </section>

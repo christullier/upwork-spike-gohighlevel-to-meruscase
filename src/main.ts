@@ -29,13 +29,6 @@ const DEFAULT_PIPELINE: PipelineItem[] = [
   { leadId: "88190", stage: "contacted" },
 ];
 
-const EMPTY_LOG = `
-  <div class="empty" id="log-empty">
-    <div class="empty-icon" aria-hidden="true">↓</div>
-    <p class="empty-title">Webhook is idle</p>
-    <p>Mark a lead as signed. The steps appear here.</p>
-  </div>`;
-
 function el<T extends Element>(selector: string): T {
   const node = document.querySelector<T>(selector);
   if (!node) throw new Error(`Missing element: ${selector}`);
@@ -45,6 +38,16 @@ function el<T extends Element>(selector: string): T {
 const pipelineEl = el<HTMLDivElement>("#pipeline");
 const logEl = el<HTMLDivElement>("#log");
 const logScrollEl = el<HTMLDivElement>("#log-scroll");
+const logEmptyEl = el<HTMLDivElement>("#log-empty");
+const logDetailsEl = el<HTMLDetailsElement>("#run-details");
+const logDetailsCountEl = el<HTMLSpanElement>("#run-details-count");
+const runNowEl = el<HTMLDivElement>("#run-now");
+const runNowKickerEl = el<HTMLSpanElement>("#run-now-kicker");
+const runNowTitleEl = el<HTMLParagraphElement>("#run-now-title");
+const runNowSummaryEl = el<HTMLParagraphElement>("#run-now-summary");
+const runCountEl = el<HTMLSpanElement>("#run-count");
+const progressEl = el<HTMLDivElement>("#progress");
+const progressFillEl = el<HTMLSpanElement>("#progress-fill");
 const merusEl = el<HTMLDivElement>("#merus");
 const merusCountEl = el<HTMLSpanElement>("#merus-count");
 const scenarioEl = el<HTMLSelectElement>("#scenario");
@@ -276,7 +279,9 @@ function appendStep(step: Step): void {
     </div>`;
 
   logEl.appendChild(li);
-  logScrollEl.scrollTo({ top: logScrollEl.scrollHeight, behavior: "smooth" });
+  if (logDetailsEl.open) {
+    logScrollEl.scrollTo({ top: logScrollEl.scrollHeight, behavior: "smooth" });
+  }
 }
 
 function cancelPlayback(): void {
@@ -289,16 +294,51 @@ function cancelPlayback(): void {
   revealed = 0;
 }
 
+function updateProgress(completed: number, total: number): void {
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+  progressFillEl.style.width = `${percent}%`;
+  progressEl.setAttribute("aria-valuenow", String(percent));
+  runCountEl.textContent = `${completed} / ${total}`;
+  logDetailsCountEl.textContent = `${completed} of ${total} steps`;
+}
+
+function setNow(step: Step, completed: number, total: number): void {
+  runNowEl.className = "run-now";
+  runNowKickerEl.textContent = completed === 0 ? "Starting" : "In progress";
+  runNowTitleEl.textContent = step.title;
+  runNowSummaryEl.textContent = step.summary;
+  updateProgress(completed, total);
+}
+
+function setDone(): void {
+  if (currentSteps.length === 0) return;
+  const result = currentSteps.find((step) => step.kind === "result");
+  const skipped = currentSteps.some(
+    (step) => step.kind === "idempotency" && step.tone === "skip",
+  );
+
+  runNowEl.className = `run-now done${skipped ? " skip" : ""}`;
+  runNowKickerEl.textContent = skipped ? "Skipped" : "Done";
+  runNowTitleEl.textContent = skipped ? "No duplicate case" : "Run complete";
+  runNowSummaryEl.textContent =
+    result?.summary ??
+    (skipped ? "MerusCase is unchanged." : "The run is complete.");
+  updateProgress(currentSteps.length, currentSteps.length);
+}
+
 function finishPlayback(): void {
   if (timer !== null) {
     window.clearTimeout(timer);
     timer = null;
   }
   playToken += 1;
-  for (let index = revealed; index < currentSteps.length; index += 1) {
-    appendStep(currentSteps[index]);
+  if (revealed < currentSteps.length) {
+    for (let index = revealed; index < currentSteps.length; index += 1) {
+      appendStep(currentSteps[index]);
+    }
+    revealed = currentSteps.length;
+    setDone();
   }
-  revealed = currentSteps.length;
 }
 
 function play(steps: Step[]): void {
@@ -306,23 +346,37 @@ function play(steps: Step[]): void {
   currentSteps = steps;
   revealed = 0;
   logEl.innerHTML = "";
+  logEmptyEl.hidden = true;
+  runNowEl.hidden = false;
+  runNowEl.className = "run-now";
+  logDetailsEl.hidden = false;
+  logDetailsEl.open = false;
+  logTopEl.hidden = true;
+  updateProgress(0, steps.length);
+  setNow(steps[0], 0, steps.length);
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (skipEl.checked || reducedMotion) {
-    for (const step of steps) appendStep(step);
-    revealed = steps.length;
+    for (const step of steps) {
+      appendStep(step);
+      revealed += 1;
+    }
+    setDone();
     return;
   }
 
   const token = playToken;
   const tick = (): void => {
     if (token !== playToken) return;
-    appendStep(steps[revealed]);
+    const step = steps[revealed];
+    appendStep(step);
     revealed += 1;
+    setNow(step, revealed, steps.length);
     if (revealed < steps.length) {
       timer = window.setTimeout(tick, 480);
     } else {
       timer = null;
+      setDone();
     }
   };
   timer = window.setTimeout(tick, 120);
@@ -339,7 +393,13 @@ function updateControls(): void {
 
 function clearLog(): void {
   cancelPlayback();
-  logEl.innerHTML = EMPTY_LOG;
+  logEl.innerHTML = "";
+  logEmptyEl.hidden = false;
+  runNowEl.hidden = true;
+  runNowEl.className = "run-now";
+  logDetailsEl.hidden = true;
+  logDetailsEl.open = false;
+  logDetailsCountEl.textContent = "";
   logTopEl.hidden = true;
 }
 
@@ -498,7 +558,11 @@ replayEl.addEventListener("click", replayWebhook);
 resetEl.addEventListener("click", resetAll);
 
 logScrollEl.addEventListener("scroll", () => {
-  logTopEl.hidden = logScrollEl.scrollTop < 120;
+  logTopEl.hidden = !logDetailsEl.open || logScrollEl.scrollTop < 120;
+});
+
+logDetailsEl.addEventListener("toggle", () => {
+  logTopEl.hidden = !logDetailsEl.open || logScrollEl.scrollTop < 120;
 });
 
 logTopEl.addEventListener("click", () => {
